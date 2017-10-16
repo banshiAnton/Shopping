@@ -1,0 +1,94 @@
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Brand</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Shopping Cart</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-user" aria-hidden="true"></i> User Management <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+
+                        {{# if login}}
+
+                            <li><a href="/profile">{{ session.user.email }}</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="/logout">Logout</a></li>
+
+                        {{else}}
+
+                            <li><a href="/signUp">Sign Up</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" data-toggle="modal" data-target="#myModal" type="button">Sign In</a></li>
+
+                        {{/if}}
+                    </ul>
+                </li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container">
+    <!--<button class="btn btn-primary pull-right" data-toggle="modal" data-target="#myModal" type="button">Sign Up</button>-->
+
+    <div class="modal fade bs-emample-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mymodallable">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal" aria-label="close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="mymodallable">Form</h4>
+                </div>
+                <div class="modal-body" id="FormBodySingIn">
+                    <form action="" id="signin" name="signin" enctype="multipart/form-data" method="post" class="form-horizontal">
+
+                        <div class="form-group">
+                            <label for="email" class="col-sm-5 contol-lable">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" name="email" id="email" required placeholder="Email" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="col-sm-5 contol-lable">Password</label>
+                            <div class="col-sm-10">
+                                <input type="password" required name="password" id="password" placeholder="Password" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <div class="checkbox">
+                                    <lable>
+                                        <input type="checkbox">Remember me
+                                    </lable>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="modal-footer">
+                            <button class="btn btn-primary pull-left" type="submit">Sign In</button>
+                            <a href="/signUp" class="btn btn-primary pull-left">Sign Up</a>
+                            <button class="btn btn-dafault" type="button" data-dismiss="modal">Close</button>
+                        </div>
+                        <input type="hidden" name="_csrf" value="{{token}}">
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
