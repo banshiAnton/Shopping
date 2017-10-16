@@ -9,6 +9,7 @@ let mongoose = require('mongoose');
 let countryImagePath = '/images/flags/';
 let csrf = require('csurf');
 let passport = require('passport');
+let Cart = require('../models/cart');
 
 let csrfProtection = csrf();
 
@@ -78,9 +79,9 @@ router.post('/putCoffee', (req, res, next) => {
 
 router.post('/signIn', (req, res, next) => {
 
-    passport.authenticate('local.signin', function (err, user , info) {
+    passport.authenticate('local.signin', (err, user , info) => {
 
-        console.log('args ', arguments);
+        // console.log('args ', arguments);
 
         if(err) {
             next(err)
@@ -88,7 +89,7 @@ router.post('/signIn', (req, res, next) => {
             console.log('Info ',info);
             res.send(info.message);
         } else {
-            req.login(user, function(err) {
+            req.login(user, (err) => {
                 req.session.user = req.user;
                 if (err) { return next(err); }
                 return res.send('/profile');
@@ -105,9 +106,9 @@ router.get('/signUp', (req, res, next) => {
 
 router.post('/signUp', (req, res, next) => {
 
-    passport.authenticate('local.signup', function (err, user , info) {
+    passport.authenticate('local.signup', (err, user , info) => {
 
-        console.log('args ', arguments);
+        // console.log('args ', arguments);
 
         if(err) {
             next(err)
@@ -115,7 +116,7 @@ router.post('/signUp', (req, res, next) => {
             console.log('Info ',info);
             res.send(info.message);
         } else {
-            req.login(user, function(err) {
+            req.login(user, (err) => {
                 if (err) { return next(err); }
                 req.session.user = req.user;
                 return res.send('/profile');
@@ -125,13 +126,31 @@ router.post('/signUp', (req, res, next) => {
 
 });
 
+router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
+    let productId = req.params.id;
+    let cart = new Cart(req.session.cart ? req.session.cart : {});
+
+    Product.findById(productId, (err, product) => {
+        if(err) {
+            console.log('Err', err);
+            throw new Error(err);
+            return res.redirect('/');
+        }
+
+        cart.add(product, product.id);
+        req.session.cart = cart;
+        console.log('Ses Cart', req.session.cart);
+        res.redirect('/');
+    });
+});
+
 function isLoggedIn(req, res, next) {
     if(req.isAuthenticated()) {
         console.log('Log in true');
         return next();
     } else {
         console.log('Redirect to /');
-        res.redirect('/');
+        res.redirect('/signUp');
     }
 };
 
@@ -143,29 +162,4 @@ function noLoggedIn(req, res, next) {
     }
 };
 
-// app.post('/login', function(req, res, next) {
-//     passport.authenticate('local', function(err, user, info) {
-//         if (err) {
-//             return next(err); // will generate a 500 error
-//         }
-//         // Generate a JSON response reflecting authentication status
-//         if (! user) {
-//             return res.send({ success : false, message : 'authentication failed' });
-//         }
-//         // ***********************************************************************
-//         // "Note that when using a custom callback, it becomes the application's
-//         // responsibility to establish a session (by calling req.login()) and send
-//         // a response."
-//         // Source: http://passportjs.org/docs
-//         // ***********************************************************************
-//         req.login(user, loginErr => {
-//             if (loginErr) {
-//                 return next(loginErr);
-//             }
-//             return res.send({ success : true, message : 'authentication succeeded' });
-//         });
-//     })(req, res, next);
-// });
-
-// export default router;
 module.exports = router;
