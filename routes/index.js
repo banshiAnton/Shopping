@@ -17,11 +17,6 @@ mongoose.connect('mongodb://localhost/shopping',{
     useMongoClient: true,
 });
 
-// router.use(function timeLog (req, res, next) {
-//     console.log('Time: ', Date.now())
-//     next()
-// });
-
 router.use(csrfProtection);
 
 router.use((req, res, next) => {
@@ -36,7 +31,10 @@ router.get('/profile', isLoggedIn, (req, res, next) => {
 
 router.get('/logout', isLoggedIn, (req, res, next) => {
     req.logout();
+    console.log("REQ    ", req.session);
+    console.log('Req. log', req.isAuthenticated());
     res.redirect('/');
+
 });
 
 router.get('/', (req, res, next) => {
@@ -142,6 +140,16 @@ router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
         console.log('Ses Cart', req.session.cart);
         res.redirect('/');
     });
+});
+
+router.get('/sopping-cart', isLoggedIn, (req, res, next) => {
+    if(!req.session.cart) {
+        return res.render('sopping-cart', {products: null});
+    }
+
+    let cart = new Cart(req.session.cart);
+    res.render('sopping-cart', {products: cart.genArray(), totalPrice: cart.totalPrice});
+
 });
 
 function isLoggedIn(req, res, next) {
