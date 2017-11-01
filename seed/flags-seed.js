@@ -1,5 +1,3 @@
-// import Flag from '../models/flag';
-
 let Flag = require('../models/flag');
 let mongoose = require('mongoose');
 

@@ -1,27 +1,14 @@
-// import Product from '../models/product';
-// import Flag from '../models/flag';
-
 let express = require('express');
 let router = express.Router();
 let Product = require('../models/product');
 let Flag = require('../models/flag');
 let mongoose = require('mongoose');
 let countryImagePath = '/images/flags/';
-let csrf = require('csurf');
 let passport = require('passport');
 let Cart = require('../models/cart');
 
-let csrfProtection = csrf();
-
 mongoose.connect('mongodb://localhost/shopping',{
     useMongoClient: true,
-});
-
-router.use(csrfProtection);
-
-router.use((req, res, next) => {
-    res.locals.token = req.csrfToken();
-    next();
 });
 
 router.get('/profile', isLoggedIn, (req, res, next) => {
@@ -31,7 +18,7 @@ router.get('/profile', isLoggedIn, (req, res, next) => {
 
 router.get('/logout', isLoggedIn, (req, res, next) => {
     req.logout();
-    console.log("REQ    ", req.session);
+    console.log("REQ ", req.session);
     console.log('Req. log', req.isAuthenticated());
     res.redirect('/');
 
@@ -136,7 +123,7 @@ router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
         }
 
         cart.add(product, product.id);
-        req.session.cart = cart;
+        req.session.cart = cart.getObj();
         console.log('Ses Cart', req.session.cart);
         res.redirect('/');
     });

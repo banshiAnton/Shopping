@@ -1,5 +1,3 @@
-// import index from './routes/index';
-
 let express = require('express');
 let fileUpload = require('express-fileupload');
 let path = require('path');
@@ -14,6 +12,9 @@ let flash = require('connect-flash');
 let validator = require('express-validator');
 let expressHbs = require('express-handlebars');
 let MongoStore = require('connect-mongo')(session);
+let csrf = require('csurf');
+
+let csrfProtection = csrf();
 
 let index = require('./routes/index');
 
@@ -29,13 +30,13 @@ app.engine('.hbs', expressHbs({defaultLayout: 'layout', extname: '.hbs'}));
 app.set('view engine', '.hbs');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
-app.use(cookieParser());
 app.use(fileUpload());
+app.use(cookieParser());
 app.use(session({
     secret: 'mySecret',
     resave: false,
@@ -52,7 +53,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
+app.use(csrfProtection, (req, res, next) => {
+   res.locals.token = req.csrfToken();
    res.locals.login = req.isAuthenticated();
    res.locals.session = req.session;
    next();
@@ -77,7 +79,5 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error');
 });
-
-// export default app;
 
 module.exports = app;

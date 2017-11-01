@@ -23,4 +23,12 @@ module.exports = class {
         }
         return arr;
     }
+
+    getObj() {
+        return {
+            items: this.items,
+            totalQty: this.totalQty,
+            totalPrice: this.totalPrice
+        }
+    }
 }

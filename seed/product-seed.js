@@ -1,5 +1,3 @@
-// import Product from '../models/product';
-
 let Product = require('../models/product');
 let mongoose = require('mongoose');
 
