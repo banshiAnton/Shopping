@@ -1,25 +1,36 @@
 let express = require('express');
-let router = express.Router();
-let Product = require('../models/product');
-let Flag = require('../models/flag');
 let mongoose = require('mongoose');
-let countryImagePath = '/images/flags/';
 let passport = require('passport');
+let fs = require('fs');
+
+let Product = require('../models/product');
 let Cart = require('../models/cart');
+
+let router = express.Router();
+
+let countryImagePath = '/images/flags/';
+let productImagePath = '/images/products/';
+let productImagePathToSave = __dirname + '\\..\\public\\images\\products\\';
 
 mongoose.connect('mongodb://localhost/shopping',{
     useMongoClient: true,
 });
 
+// MyColl.remove({}, function(err, row) {
+//     if (err) {
+//         console.log("Collection couldn't be removed" + err);
+//         return;
+//     }
+//
+//     console.log("collection removed");
+// })
+
 router.get('/profile', isLoggedIn, (req, res, next) => {
     res.render('profile');
-    console.log('Ses', req.session);
 });
 
 router.get('/logout', isLoggedIn, (req, res, next) => {
     req.logout();
-    console.log("REQ ", req.session);
-    console.log('Req. log', req.isAuthenticated());
     res.redirect('/');
 
 });
@@ -32,7 +43,7 @@ router.get('/', (req, res, next) => {
           products.push(docs.slice(i, i + stepChunk));
       }
 
-      res.render('index', { products , countryImagePath , title: 'Express'});
+      res.render('index', { products, productImagePath, countryImagePath, title: 'Express'});
     });
 });
 
@@ -46,19 +57,29 @@ router.post('/putCoffee', (req, res, next) => {
 
     console.log(title, country, price, description);
 
-    let img = req.files.img.data.toString('base64');
+    let {name, data} = req.files.img;
 
-    let newProduct = new Product({img, country, title, description, price});
-
-    newProduct.save((err, prod) => {
-        if(err) {
-            console.log('Save err', err);
-            throw new Error();
+    fs.writeFile(productImagePathToSave + name, data, (err) => {
+        if (err) {
+            console.log(err);
+            throw err;
         } else {
-            console.log("New Product", prod);
-            res.send("post method done");
+
+            let newProduct = new Product({img:name, country, title, description, price});
+
+            newProduct.save((err, prod) => {
+                if(err) {
+                    console.log('Save err', err);
+                    throw new Error();
+                } else {
+                    console.log("New Product", prod);
+                    res.send("post method done");
+                }
+            });
         }
     });
+
+    //let img = req.files.img.data.toString('base64');
 
 });
 
@@ -75,8 +96,8 @@ router.post('/signIn', (req, res, next) => {
             res.send(info.message);
         } else {
             req.login(user, (err) => {
-                req.session.user = req.user;
                 if (err) { return next(err); }
+                req.user = user;
                 return res.send('/profile');
             });
         }
@@ -103,7 +124,7 @@ router.post('/signUp', (req, res, next) => {
         } else {
             req.login(user, (err) => {
                 if (err) { return next(err); }
-                req.session.user = req.user;
+                req.user = user;
                 return res.send('/profile');
             });
         }
@@ -141,10 +162,8 @@ router.get('/sopping-cart', isLoggedIn, (req, res, next) => {
 
 function isLoggedIn(req, res, next) {
     if(req.isAuthenticated()) {
-        console.log('Log in true');
         return next();
     } else {
-        console.log('Redirect to /');
         res.redirect('/signUp');
     }
 };

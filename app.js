@@ -13,16 +13,15 @@ let validator = require('express-validator');
 let expressHbs = require('express-handlebars');
 let MongoStore = require('connect-mongo')(session);
 let csrf = require('csurf');
-
-let csrfProtection = csrf();
-
 let index = require('./routes/index');
+
 
 let app = express();
 
 mongoose.connect('mongodb://localhost/shopping',{
     useMongoClient: true,
 });
+
 require('./config/passport');
 
 // view engine setup
@@ -52,12 +51,23 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(csrf());
 
-app.use(csrfProtection, (req, res, next) => {
+app.use((req, res, next) => {
    res.locals.token = req.csrfToken();
    res.locals.login = req.isAuthenticated();
    res.locals.session = req.session;
+   res.locals.user = req.user;
    next();
+
+    // let collection = mongoose.connection.db.collection('sessions');
+    //
+    // collection.find().toArray(function(err, sessions) {
+    //     console.log("\n\n\n\nPIMPODSGF\n\n\n\n");
+    //     console.dir(sessions);
+    // });
+
+
 });
 
 app.use('/', index);
