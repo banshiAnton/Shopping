@@ -160,6 +160,13 @@ router.get('/sopping-cart', isLoggedIn, (req, res, next) => {
 
 });
 
+router.get('/checkout', isLoggedIn, (req, res, next) => {
+    if(!req.session.cart) {
+        return res.redirect('/sopping-cart');
+    }
+    res.render('checkout', {total: req.session.cart.totalPrice});
+});
+
 function isLoggedIn(req, res, next) {
     if(req.isAuthenticated()) {
         return next();
