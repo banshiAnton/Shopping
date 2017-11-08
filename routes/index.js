@@ -1,6 +1,7 @@
 let express = require('express');
 let mongoose = require('mongoose');
 let passport = require('passport');
+let stripe = require('stripe')('sk_test_kX9iSyDFueVcvIf5Ora4rGvw');
 let fs = require('fs');
 
 let Product = require('../models/product');
@@ -39,6 +40,9 @@ router.get('/logout', isLoggedIn, (req, res, next) => {
 });
 
 router.get('/', (req, res, next) => {
+
+  let successMsg = req.flash('success')[0];
+
   Product.find((err, docs) => {
       let products = [];
       let stepChunk = 3;
@@ -46,7 +50,7 @@ router.get('/', (req, res, next) => {
           products.push(docs.slice(i, i + stepChunk));
       }
 
-      res.render('index', { products, productImagePath, countryImagePath, title: 'Express'});
+      res.render('index', { products, productImagePath, countryImagePath, successMsg, noMsg: !successMsg,title: 'Express'});
     });
 });
 
@@ -170,7 +174,38 @@ router.get('/checkout', isLoggedIn, (req, res, next) => {
     if(!req.session.cart) {
         return res.redirect('/sopping-cart');
     }
-    res.render('checkout', {total: req.session.cart.totalPrice});
+    let cart = new Cart(req.session.cart);
+    let errMsg = req.flash('error')[0];
+    res.render('checkout', {total: cart.totalPrice, errMsg, noError: !errMsg});
+});
+
+router.post('/checkout', (req, res, next) => {
+    if(!req.session.cart) {
+        return res.redirect('/sopping-cart');
+    }
+
+    let cart = new Cart(req.session.cart);
+
+    stripe.charges.create({
+        amount: cart.totalPrice * 100,
+        currency: "usd",
+        source: req.body.stripeToken, // obtained with Stripe.js
+        description: "Charge for " + req.user.email
+    }, {
+        idempotency_key: "CXrbwPOKmbIdyKUZ"
+    }, function(err, charge) {
+
+        if(err) {
+            req.flash('error', err.message);
+            return res.redirect('/checkout');
+        }
+
+        req.flash('success', 'Success bought ' + cart.totalPrice);
+        req.session.cart = null;
+        res.redirect('/');
+
+    });
+
 });
 
 function isLoggedIn(req, res, next) {

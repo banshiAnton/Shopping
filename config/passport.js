@@ -2,13 +2,13 @@ let passport = require('passport');
 let LocalStrategy = require('passport-local').Strategy;
 let User = require('../models/user');
 
-passport.serializeUser(function (user, done) {
+passport.serializeUser((user, done) => {
     console.log('\nSERIALIZE_USER');
     done(null, user.id);
 });
 
-passport.deserializeUser(function (id, done) {
-    User.findById(id, function (err, user) {
+passport.deserializeUser((id, done) => {
+    User.findById(id, (err, user) => {
         console.log('\nDE_SERIALIZE_USER');
         done(err, user);
     });
@@ -18,7 +18,7 @@ passport.use('local.signup', new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password',
     passReqToCallback: true
-}, function (req, email, password, done) {
+}, (req, email, password, done) => {
 
     req.checkBody('email', 'Invalid email').notEmpty().isEmail();
     req.checkBody('password', 'Invalid password').notEmpty().isLength({min:4});
@@ -36,7 +36,7 @@ passport.use('local.signup', new LocalStrategy({
     };
 
 
-    User.findOne({email}, function (err, user) {
+    User.findOne({email}, (err, user) => {
         if(err) {
             return done(err);
         } else if (user) {
@@ -45,7 +45,7 @@ passport.use('local.signup', new LocalStrategy({
             let newUser = new User();
             newUser.email = email;
             newUser.password = newUser.encryptPassword(password);
-            newUser.save(function (err, result) {
+            newUser.save((err, result) => {
                 if(err) {
                     console.log('Save user err', err);
                     throw new Error();
