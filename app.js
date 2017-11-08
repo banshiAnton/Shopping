@@ -54,6 +54,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(csrf());
 
 app.use((req, res, next) => {
+   console.log('\nSetup session', req.session);
+   console.log('\nSetup req.user', req.user);
    res.locals.token = req.csrfToken();
    res.locals.login = req.isAuthenticated();
    res.locals.session = req.session;

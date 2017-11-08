@@ -3,18 +3,20 @@ let LocalStrategy = require('passport-local').Strategy;
 let User = require('../models/user');
 
 passport.serializeUser(function (user, done) {
+    console.log('\nSERIALIZE_USER\n');
     done(null, user.id);
 });
 
 passport.deserializeUser(function (id, done) {
     User.findById(id, function (err, user) {
+        console.log('\nDE_SERIALIZE_USER\n');
         done(err, user);
     });
 });
 
 passport.use('local.signup', new LocalStrategy({
     usernameField: 'email',
-    password: 'password',
+    passwordField: 'password',
     passReqToCallback: true
 }, function (req, email, password, done) {
 
@@ -59,7 +61,7 @@ passport.use('local.signup', new LocalStrategy({
 
 passport.use('local.signin', new LocalStrategy({
     usernameField: 'email',
-    password: 'password',
+    passwordField: 'password',
     passReqToCallback: true
 }, function (req, email, password, done) {
 

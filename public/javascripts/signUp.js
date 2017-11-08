@@ -4,7 +4,7 @@ $(function () {
 
         let form = $(this);
 
-        if(form.password !== password_confirmation) {
+        if(form.password != form.password_confirmation) {
             viewError('Invalid confirm password');
             return false;
         }

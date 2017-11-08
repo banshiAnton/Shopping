@@ -30,9 +30,12 @@ router.get('/profile', isLoggedIn, (req, res, next) => {
 });
 
 router.get('/logout', isLoggedIn, (req, res, next) => {
+    console.log('\nBefore Logout session', req.session);
+    console.log('\nBefore Logout req.user', req.user);
     req.logout();
     res.redirect('/');
-
+    console.log('\nLogout session', req.session);
+    console.log('\nLogout req.user', req.user);
 });
 
 router.get('/', (req, res, next) => {
@@ -97,7 +100,8 @@ router.post('/signIn', (req, res, next) => {
         } else {
             req.login(user, (err) => {
                 if (err) { return next(err); }
-                req.user = user;
+                console.log('\nLogin Session', req.session);
+                console.log('\nLogin User', req.user);
                 return res.send('/profile');
             });
         }
@@ -106,7 +110,7 @@ router.post('/signIn', (req, res, next) => {
 
 });
 
-router.get('/signUp', (req, res, next) => {
+router.get('/signUp',noLoggedIn , (req, res, next) => {
     res.render('signUp')
 });
 
@@ -124,7 +128,9 @@ router.post('/signUp', (req, res, next) => {
         } else {
             req.login(user, (err) => {
                 if (err) { return next(err); }
-                req.user = user;
+                // req.user = user;
+                console.log('\nSignup Session', req.session);
+                console.log('\nSignup User', req.user);
                 return res.send('/profile');
             });
         }
@@ -145,7 +151,7 @@ router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
 
         cart.add(product, product.id);
         req.session.cart = cart.getObj();
-        console.log('Ses Cart', req.session.cart);
+        console.log('\nSession cart', req.session.cart);
         res.redirect('/');
     });
 });
