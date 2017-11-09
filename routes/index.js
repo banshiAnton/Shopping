@@ -49,9 +49,9 @@ router.get('/', (req, res, next) => {
       for(let i = 0; i < docs.length; i += stepChunk) {
           products.push(docs.slice(i, i + stepChunk));
       }
-
       res.render('index', { products, productImagePath, countryImagePath, successMsg, noMsg: !successMsg,title: 'Express'});
     });
+
 });
 
 router.get('/putCoffee', (req, res, next) => {
@@ -166,7 +166,26 @@ router.get('/sopping-cart', isLoggedIn, (req, res, next) => {
     }
 
     let cart = new Cart(req.session.cart);
+    console.log("CART",cart.genArray());
     res.render('sopping-cart', {products: cart.genArray(), totalPrice: cart.totalPrice});
+
+});
+
+router.get('/remove/:act/:id', isLoggedIn, (req, res, next) => {
+    if(!req.session.cart) {
+        return res.redirect('/');
+    }
+
+    let productId = req.params.id;
+    let act = req.params.act;
+    let cart = new Cart(req.session.cart);
+
+    console.log("id", productId);
+    console.log("act", act, typeof act);
+
+    req.session.cart = cart.reduce(act, productId);
+
+    res.redirect('/sopping-cart');
 
 });
 
@@ -186,13 +205,13 @@ router.post('/checkout', (req, res, next) => {
 
     let cart = new Cart(req.session.cart);
 
+    console.log("\nSTRIPE TOLEN", req.body.stripeToken);
+
     stripe.charges.create({
         amount: cart.totalPrice * 100,
         currency: "usd",
         source: req.body.stripeToken, // obtained with Stripe.js
         description: "Charge for " + req.user.email
-    }, {
-        idempotency_key: "CXrbwPOKmbIdyKUZ"
     }, function(err, charge) {
 
         if(err) {
@@ -200,7 +219,7 @@ router.post('/checkout', (req, res, next) => {
             return res.redirect('/checkout');
         }
 
-        req.flash('success', 'Success bought ' + cart.totalPrice);
+        req.flash('success', 'Success bought $' + cart.totalPrice);
         req.session.cart = null;
         res.redirect('/');
 

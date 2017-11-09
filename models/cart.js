@@ -31,4 +31,30 @@ module.exports = class {
             totalPrice: this.totalPrice
         }
     }
+
+    reduce(action, id) {
+
+        let del = (id) => {
+            delete this.items[id];
+        }
+
+        if(action == 'one') {
+            this.items[id].qty--;
+            this.totalQty--;
+
+            if(this.items[id].qty == 0) {
+                if(this.totalQty == 0) {
+                    return null;
+                }
+                del(id);
+            }
+
+        } else if(action == 'all') {
+            del(id);
+        } else {
+            console.log("DOT UNDERSTUD");
+        }
+
+        return this.getObj();
+    }
 }

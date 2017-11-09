@@ -74,6 +74,10 @@ app.use((req, res, next) => {
 
 app.use('/', index);
 
+// app.use((req, res, next) => {
+//     res.end('<h1>pimp</h1>');
+// });
+
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
   let err = new Error('Not Found');
