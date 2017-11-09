@@ -38,6 +38,14 @@ module.exports = class {
             delete this.items[id];
         }
 
+        let reloadPrice = () => {
+            this.totalPrice = 0;
+            for(let id in this.items) {
+                this.items[id].price = this.items[id].item.price * this.items[id].qty;
+                this.totalPrice +=  this.items[id].price;
+            }
+        }
+
         if(action == 'one') {
             this.items[id].qty--;
             this.totalQty--;
@@ -50,10 +58,13 @@ module.exports = class {
             }
 
         } else if(action == 'all') {
+            this.totalQty -= this.items[id].qty;
             del(id);
         } else {
             console.log("DOT UNDERSTUD");
         }
+
+        reloadPrice();
 
         return this.getObj();
     }
