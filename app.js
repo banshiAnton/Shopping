@@ -60,6 +60,7 @@ app.use((req, res, next) => {
    res.locals.login = req.isAuthenticated();
    res.locals.session = req.session;
    res.locals.user = req.user;
+   console.log('\nCKOOKIES', req.cookies);
    next();
 
     // let collection = mongoose.connection.db.collection('sessions');
