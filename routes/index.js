@@ -5,6 +5,7 @@ let stripe = require('stripe')('sk_test_kX9iSyDFueVcvIf5Ora4rGvw');
 let fs = require('fs');
 
 let Product = require('../models/product');
+let Order = require('../models/order');
 let Cart = require('../models/cart');
 
 let router = express.Router();
@@ -219,9 +220,24 @@ router.post('/checkout', (req, res, next) => {
             return res.redirect('/checkout');
         }
 
-        req.flash('success', 'Success bought $' + cart.totalPrice);
-        req.session.cart = null;
-        res.redirect('/');
+        let order = new Order ({
+            user: req.user,
+            cart,
+            paymentId: charge.id
+        });
+
+        order.save(function (err, result) {
+
+            if(err) {
+                console.log("err", err);
+                return next(err);
+            }
+
+            req.flash('success', 'Success bought $' + cart.totalPrice);
+            req.session.cart = null;
+            res.redirect('/');
+
+        });
 
     });
 
