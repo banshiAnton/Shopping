@@ -4,7 +4,8 @@ let Schema = mongoose.Schema;
 
 let userSchema = new Schema({
     email: {type: String, required: true},
-    password: {type: String, required: true}
+    password: {type: String, required: true},
+    cart: {type: Object}
 });
 
 userSchema.methods.encryptPassword = function (password) {

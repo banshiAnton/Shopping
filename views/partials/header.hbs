@@ -17,9 +17,13 @@
                 <li>
                     <a href="/sopping-cart/">
                         <i class="fa fa-shopping-cart" aria-hidden="true"></i> Shopping Cart
-                        {{# if login}}
+                        {{# if user.cart.totalQty}}
 
-                            <span class="badge">{{session.cart.totalQty}}</span>
+                            <span class="badge">{{user.cart.totalQty}}</span>
+
+                        {{else}}
+
+                            <span class="badge">0</span>
 
                         {{/if}}
                     </a>
@@ -92,6 +96,7 @@
                             <button class="btn btn-dafault" type="button" data-dismiss="modal">Close</button>
                         </div>
                         <input type="hidden" name="_csrf" value="{{token}}">
+                        <p>Don't have an account& <a href="/signup">Sign uo instead!</a></p>
                     </form>
 
                 </div>

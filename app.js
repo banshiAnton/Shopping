@@ -61,6 +61,9 @@ app.use((req, res, next) => {
    res.locals.session = req.session;
    res.locals.user = req.user;
    console.log('\nCKOOKIES', req.cookies);
+   req.on('end', function () {
+      console.log('URL', req.url);
+   });
    next();
 
     // let collection = mongoose.connection.db.collection('sessions');

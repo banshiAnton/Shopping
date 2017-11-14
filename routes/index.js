@@ -7,6 +7,7 @@ let fs = require('fs');
 let Product = require('../models/product');
 let Order = require('../models/order');
 let Cart = require('../models/cart');
+let User = require('../models/user');
 
 let router = express.Router();
 
@@ -28,7 +29,22 @@ mongoose.connect('mongodb://localhost/shopping',{
 // })
 
 router.get('/profile', isLoggedIn, (req, res, next) => {
-    res.render('profile');
+    Order.find({user: req.user}, (err, orders) => {
+        if(err) {console.log('Err', err);
+            throw new Error();
+        } else {
+
+            orders.forEach((order) => {
+                console.log('Before', order.cart);
+                let cart = new Cart(order.cart);
+                console.log('Cart', cart.genArray());
+                order.items = cart.genArray();
+                console.log('After', order.cart);
+            });
+            console.log('ORDERS', orders);
+            res.render('profile', {orders});
+        }
+    });
 });
 
 router.get('/logout', isLoggedIn, (req, res, next) => {
@@ -107,6 +123,11 @@ router.post('/signIn', (req, res, next) => {
                 if (err) { return next(err); }
                 console.log('\nLogin Session', req.session);
                 console.log('\nLogin User', req.user);
+                if(req.session.oldUrl) {
+                    let url = req.session.oldUrl;
+                    req.session.oldUrl = null;
+                    return res.send(url);
+                }
                 return res.send('/profile');
             });
         }
@@ -136,6 +157,11 @@ router.post('/signUp', (req, res, next) => {
                 // req.user = user;
                 console.log('\nSignup Session', req.session);
                 console.log('\nSignup User', req.user);
+                if(req.session.oldUrl) {
+                    let url = req.session.oldUrl;
+                    req.session.oldUrl = null;
+                    return res.send(url);
+                }
                 return res.send('/profile');
             });
         }
@@ -145,7 +171,7 @@ router.post('/signUp', (req, res, next) => {
 
 router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
     let productId = req.params.id;
-    let cart = new Cart(req.session.cart ? req.session.cart : {});
+    let cart = new Cart(req.user.cart ? req.user.cart : {});
 
     Product.findById(productId, (err, product) => {
         if(err) {
@@ -155,56 +181,74 @@ router.get('/add-to-cart/:id', isLoggedIn,(req, res, next) => {
         }
 
         cart.add(product, product.id);
-        req.session.cart = cart.getObj();
-        console.log('\nSession cart', req.session.cart);
-        res.redirect('/');
+
+        User.findOneAndUpdate({ '_id': req.user._id }, { $set: { cart: cart.getObj() }}, {new: true}, (err, result) => {
+
+            if(err) {
+                console.log('Err', err);
+                throw new Error(err);
+                return res.redirect('/');
+            }
+
+            console.log('\nSession cart', result.cart);
+            res.redirect('/');
+
+        });
     });
 });
 
 router.get('/sopping-cart', isLoggedIn, (req, res, next) => {
-    if(!req.session.cart) {
+    if(!req.user.cart) {
         return res.render('sopping-cart', {products: null});
     }
 
-    let cart = new Cart(req.session.cart);
+    let cart = new Cart(req.user.cart);
     console.log("CART",cart.genArray());
     res.render('sopping-cart', {products: cart.genArray(), totalPrice: cart.totalPrice});
 
 });
 
 router.get('/remove/:act/:id', isLoggedIn, (req, res, next) => {
-    if(!req.session.cart) {
+    if(!req.user.cart) {
         return res.redirect('/');
     }
 
     let productId = req.params.id;
     let act = req.params.act;
-    let cart = new Cart(req.session.cart);
+    let cart = new Cart(req.user.cart);
 
     console.log("id", productId);
     console.log("act", act, typeof act);
 
-    req.session.cart = cart.reduce(act, productId);
+    User.findOneAndUpdate({ '_id': req.user._id }, { $set: { cart: cart.reduce(act, productId) }}, {new: true}, (err, result) => {
 
-    res.redirect('/sopping-cart');
+        if(err) {
+            console.log('Err', err);
+            throw new Error(err);
+            return res.redirect('/');
+        }
+        console.log('\nSession cart', result.cart);
+        res.redirect('/sopping-cart');
+
+    });
 
 });
 
 router.get('/checkout', isLoggedIn, (req, res, next) => {
-    if(!req.session.cart) {
+    if(!req.user.cart) {
         return res.redirect('/sopping-cart');
     }
-    let cart = new Cart(req.session.cart);
+    let cart = new Cart(req.user.cart);
     let errMsg = req.flash('error')[0];
     res.render('checkout', {total: cart.totalPrice, errMsg, noError: !errMsg});
 });
 
-router.post('/checkout', (req, res, next) => {
-    if(!req.session.cart) {
+router.post('/checkout', isLoggedIn, (req, res, next) => {
+    if(!req.user.cart) {
         return res.redirect('/sopping-cart');
     }
 
-    let cart = new Cart(req.session.cart);
+    let cart = new Cart(req.user.cart);
 
     console.log("\nSTRIPE TOLEN", req.body.stripeToken);
 
@@ -233,10 +277,16 @@ router.post('/checkout', (req, res, next) => {
                 return next(err);
             }
 
-            req.flash('success', 'Success bought $' + cart.totalPrice);
-            req.session.cart = null;
-            res.redirect('/');
-
+            User.findOneAndUpdate({ '_id': req.user._id }, { $set: { cart: null }}, {new: true}, (err, result) => {
+                if(err) {
+                    console.log('Err', err);
+                    throw new Error(err);
+                    return res.redirect('/');
+                }
+                console.log('\nSession cart', result.cart);
+                req.flash('success', 'Success bought $' + cart.totalPrice);
+                res.redirect('/');
+            });
         });
 
     });
@@ -247,6 +297,7 @@ function isLoggedIn(req, res, next) {
     if(req.isAuthenticated()) {
         return next();
     } else {
+        req.session.oldUrl = req.url;
         res.redirect('/signUp');
     }
 };
